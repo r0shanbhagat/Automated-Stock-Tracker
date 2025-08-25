@@ -46,9 +46,11 @@ def get_returns_yahoo(symbol):
 
         current = hist['Close'].iloc[-1]
 
+        # For 1D, should be (-1) vs (-2)
         def pct(days):
             if len(hist) > days:
-                return (current / hist['Close'].iloc[-days] - 1) * 100
+                return (hist['Close'].iloc[-1] / hist['Close'].iloc[-2] - 1) * 100 if days == 1 else \
+                    (current / hist['Close'].iloc[-days] - 1) * 100
             return None
 
         start_year = datetime(datetime.today().year, 1, 1)
@@ -57,6 +59,7 @@ def get_returns_yahoo(symbol):
         ytd_price_perct = round((current / ytd_price - 1) * 100, 2)
         return {
             "Current Price (₹)": round(float(current), 2),
+            "1D %": round(pct(1), 2) if pct(1) else None,
             "1W %": round(pct(5), 2) if pct(5) else None,
             "2W %": round(pct(10), 2) if pct(10) else None,
             "1M %": round(pct(21), 2) if pct(21) else None,
@@ -130,8 +133,6 @@ stocks = {
     "Ramkrishna Forgings Ltd": "RKFORGE.NS",
     "Gujarat Narmada Vly Frtlzrs & Chmcl Ltd": "GNFC.NS",
     "JK Tyre & Industries Ltd": "JKTYRE.NS",
-    "Oracle Financial Services Software Ltd": "OFSS.NS",
-    "Aavas Financiers Ltd": "AAVAS.NS",
     "Bharat Bijlee Ltd": "BBL.NS",
     "Zydus Wellness Ltd": "ZYDUSWELL.NS",
     "Alivus Life Sciences Ltd": "ALIVUS.NS",
@@ -145,14 +146,12 @@ stocks = {
     "Paras Defence and Space Technologies Ltd": "PARAS.NS",
     "Unicommerce eSolutions Ltd": "UNIECOM.NS",
     "Isgec Heavy Engineering Ltd": "ISGEC.NS",
-    "Apeejay Surrendra Park Hotels Ltd": "PARKHOTELS.NS",
     "Indo US Bio-Tech Ltd": "INDOUS.NS",
     "Moil Ltd": "MOIL.NS",
     "Hindustan Zinc Ltd": "HINDZINC.NS",
     "Kernex Microsystems (India) Limited": "KERNEX.NS",
     "Camlin Fine Sciences Ltd": "CAMLINFINE.NS",
     "RHI Magnesita India Ltd": "RHIM.NS",
-    "Anik Industries Ltd": "ANIKINDS.NS",
     "Time Technoplast Ltd": "TIMETECHNO.NS",
     "R R Kabel Ltd": "RRKABEL.NS",
     "Capacite Infraprojects Ltd": "CAPACITE.NS",
@@ -161,7 +160,6 @@ stocks = {
     "Tarc Ltd": "TARC.NS",
     "Pokarna Ltd": "POKARNA.NS",
     "Brigade Enterprises Limited": "BRIGADE.NS",
-    "Info Edge (India) Ltd": "NAUKRI.NS",
     "Awfis Space Solutions Ltd": "AWFIS.NS",
     "Welspun Enterprises Ltd": "WELENT.NS",
     "Ems Ltd": "EMSLIMITED.NS",
@@ -172,8 +170,6 @@ stocks = {
     "Hindustan Oil Exploration Company Ltd": "HINDOILEXP.NS",
     "Exide Industries Ltd": "EXIDEIND.NS",
     "Surya Roshni Ltd": "SURYAROSNI.NS",
-    "Birla Corporation Ltd": "BIRLACORPN.NS",
-    "Indo Count Industries Ltd": "ICIL.NS",
     "Atul Auto Ltd": "ATULAUTO.NS",
     "Crompton Greaves Consumer Electricls Ltd": "CROMPTON.NS",
     "Apeejay Surrendra Park Hotels Ltd": "PARKHOTELS.NS",
@@ -187,8 +183,8 @@ stocks = {
     "Mangalore Refinery And Petrochemicals Ltd": "MRPL.NS",
     "Inox Wind Ltd": "INOXWIND.NS",
     "Indo Count Industries Ltd": "ICIL.NS",
-    "Dynacons Systems & Solutions Ltd": "DYNACONS.NS",
-    "Max Estates Ltd": "MAXESTATE.NS",
+    "Dynacons Systems & Solutions Ltd": "DSSL.NS",
+    "Max Estates Ltd": "MAXESTATES.NS",
     "Granules India Ltd": "GRANULES.NS",
     "Oracle Financial Services Software Ltd": "OFSS.NS",
     "Galaxy Surfactants Ltd": "GALAXYSURF.NS",
@@ -201,17 +197,19 @@ stocks = {
     "TAJ GVK Hotels & Resorts Ltd": "TAJGVK.NS",
     "Pix Transmissions Ltd": "PIXTRANS.NS",
     "Trident Ltd": "TRIDENT.NS",
-    "Sundaram-Clayton Ltd": "SUNCLAYLTD.NS",
+    "Sundaram-Clayton Ltd": "SUNCLAY.NS",
     "Piramal Enterprises Ltd": "PEL.NS",
     "Motilal Oswal Nasdaq Q50 ETF": "MONQ50.NS",
     "JBM Auto Ltd": "JBMA.NS",
     "Rane Brake Lining Ltd": "RBL.NS",
-    "Gala Precision Engineering Ltd": "GALAPRENT.NS",
+    "Gala Precision Engineering Ltd": "GALAPREC.NS",
     "Motilal Oswal Nifty Realty ETF": "MOTILALOFS.NS",
     "Gujarat Fluorochemicals Ltd": "FLUOROCHEM.NS",
     "Century Plyboards (India) Ltd": "CENTURYPLY.NS",
     "Westlife Foodworld Ltd": "WESTLIFE.NS",
-    "Monarch Networth Capital Ltd": "MONARCH.NS"
+    "Monarch Networth Capital Ltd": "MONARCH.NS",
+    "JITF Infralogistics Ltd": "JITFINFRA.NS",
+    "Rategain Travel Technologies Ltd": "RATEGAIN.NS"
 }
 
 # ---------------------------------
@@ -232,9 +230,9 @@ for name, symbol in stocks.items():
         if price:
             res = {
                 "Current Price (₹)": price,
-                "1W %": None, "2W %": None,
-                "1M %": None, "6M %": None,
-                "YTD %": None,
+                "1D %": None, "1W %": None,
+                "2W %": None, "1M %": None,
+                "6M %": None, "YTD %": None,
                 "Last Updated": datetime.today().strftime("%d-%m-%Y")
             }
 
