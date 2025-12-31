@@ -1,0 +1,57 @@
+name: Monthly Stock Excel Report
+
+on:
+ workflow_dispatch:
+  schedule:
+    # Runs at 00:00 UTC on the first of every month
+    - cron: "0 0 1 * *"
+
+jobs:
+  generate-and-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Check out your repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2️⃣ Set up Python
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: |
+          # (optional) if you have requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # 4️⃣ Run your script
+      - name: Run stock script
+        run: |
+          python script.py
+        # If your script outputs the Excel somewhere specific,
+        # adjust paths if needed
+
+      # 5️⃣ Send the Excel file by email
+      - name: Send Email with Excel
+        uses: dawidd6/action-send-mail@v6
+        with:
+          # Your SMTP server — Gmail shown here
+          # (SMTP must allow app access)
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+
+          # Email details
+          from: ${{ secrets.EMAIL_USER }}
+          to: "YOUR_EMAIL@example.com"
+          subject: "Monthly Stock Report"
+          body: "Hi there 👋\n\nHere is your monthly stock report Excel!"
+
+          # Attach the generated file — adjust filename if needed
+          attachments: "*.xlsx"
+
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
