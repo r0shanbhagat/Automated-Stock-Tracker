@@ -5,6 +5,12 @@ import json
 from datetime import datetime
 from openpyxl.reader.excel import load_workbook
 from openpyxl.styles import PatternFill
+from datetime import timedelta
+import os
+
+# Ensure output folders exist
+os.makedirs("previousdata", exist_ok=True)
+os.makedirs("result", exist_ok=True)
 
 
 # Normalize symbol by removing '.NS' suffix
@@ -14,7 +20,9 @@ def normalize_symbol(sym):
 
 # Load old trends for comparison (normalized symbol keys)
 try:
-    with open('previous_trends.json', 'r') as f:
+    yesterday_str = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    yesterday_filename = f'previousdata/previous_trends_{yesterday_str}.json'
+    with open(yesterday_filename, 'r') as f:
         old_trends_raw = json.load(f)
         old_trends = {normalize_symbol(k): v for k, v in old_trends_raw.items()}
 except FileNotFoundError:
@@ -23,11 +31,14 @@ except FileNotFoundError:
 # Dictionary to store trends of current run (normalized symbol keys)
 previous_trends = {}
 
+# Create filename with date: previous_trends_YYYY-MM-DD.json inside "previousdata"
+date_str = datetime.now().strftime('%Y-%m-%d')
+filename = f'previousdata/previous_trends_{date_str}.json'
+
 
 def save_previous_trends():
-    # Save with normalized keys including suffix stripped
     normalized_save = {normalize_symbol(k): v for k, v in previous_trends.items()}
-    with open('previous_trends.json', 'w') as f:
+    with open(filename, 'w') as f:
         json.dump(normalized_save, f)
 
 
@@ -94,10 +105,7 @@ def detect_trend_change(symbol, current_trend):
     previous_trends[norm_symbol] = current_trend
 
 
-# ---------------------------------
-# Example Stock Mapping
-# (⚠️ You will complete this with all 87 from Excel)
-# ---------------------------------
+# Example Stock Mapping (complete with your 87 stocks)
 stocks = {
     "Marksans Pharma Ltd": "MARKSANS.NS",
     "Astral Ltd": "ASTRAL.NS",
@@ -182,7 +190,8 @@ stocks = {
     "Indo Count Industries Ltd": "ICIL.NS",
     "Atul Auto Ltd": "ATULAUTO.NS",
     "Crompton Greaves Consumer Electricals Ltd": "CROMPTON.NS",
-    "Tata Motors Ltd": "TATAMOTORS.NS",
+    "Tata Motors Passenger Vhcls Ltd": "TMPV.NS",
+    "Tata Motors Ltd": "TATCOV.NS",
     "ACC Ltd": "ACC.NS",
     "Chambal Fertilisers and Chemicals Ltd": "CHAMBLFERT.NS",
     "Tejas Networks Ltd": "TEJASNET.NS",
@@ -214,7 +223,7 @@ stocks = {
     "Monarch Networth Capital Ltd": "MONARCH.NS",
     "JITF Infralogistics Ltd": "JITFINFRA.NS",
     "Rategain Travel Technologies Ltd": "RATEGAIN.NS",
-    "Swan Energy Ltd": "SWANENERGY.NS",
+    "Swan Corp Ltd": "SWANCORP.NS",
     "Firstsource Solutions Ltd": "FSL.NS",
     "Sonata Software Ltd": "SONATSOFTW.NS",
     "Yasho Industries Ltd": "YASHO.NS",
@@ -326,13 +335,43 @@ stocks = {
     "Indian Railway Finance Corp Ltd": "IRFC.NS",
     "Power Grid Corporation of India Ltd": "POWERGRID.NS",
     "Pidilite Industries Ltd": "PIDILITIND.NS",
-    "Federal Bank Ltd": "FEDERALBNK.NS"
-
+    "Federal Bank Ltd": "FEDERALBNK.NS",
+    "3M India Ltd": "3MINDIA.NS",
+    "Aarti Industries Ltd": "AARTIIND.NS",
+    "Cms Info Systems Ltd": "CMSINFO.NS",
+    "PG Electroplast Ltd": "PGEL.NS",
+    "Gujarat Ambuja Exports Ltd": "GAEL.NS",
+    "Share India Securities Ltd": "SHAREINDIA.NS",
+    "AGI Greenpac Ltd": "AGI.NS",
+    "SML Mahindra Limited": "SMLISUZU.NS",
+    "Afcons Infrastructure Limited": "AFCONS.NS",
+    "Oil and Natural Gas Corporation Ltd": "ONGC.NS",
+    "Adani Enterprises Ltd": "ADANIENT.NS",
+    "Siemens Ltd": "SIEMENS.NS",
+    "Praj Industries Ltd": "PRAJIND.NS",
+    "Ion Exchange (India) Ltd": "IONEXCHANG.NS",
+    "D Link (India) Limited": "DLINKINDIA.NS",
+    "HG Infra Engineering Ltd": "HGINFRA.NS",
+    "Texmaco Rail & Engineering Ltd": "TEXRAIL.NS",
+    "Technocraft Industries (India) Ltd": "TIIL.NS",
+    "PTC India Ltd": "PTC.NS",
+    "BF Investment Ltd": "BFINVEST.NS",
+    "Apollo Pipes Ltd": "APOLLOPIPE.NS",
+    "Maharashtra Seamless Ltd": "MAHSEAMLES.NS",
+    "Shakti Pumps (India) Ltd": "SHAKTIPUMP.NS",
+    "Ganesha Ecosphere Ltd": "GANECOS.NS",
+    "Man Infraconstruction Ltd": "MANINFRA.NS",
+    "Neogen Chemicals Ltd": "NEOGEN.NS",
+    "E2E Networks Ltd": "E2E.NS",
+    "Shanti Gold International Ltd": "SHANTIGOLD.NS",
+    "Zaggle Prepaid Ocean Services Ltd": "ZAGGLE.NS",
+    "Jindal Poly Films Ltd": "JINDALPOLY.NS"
 }
 
-# ---------------------------------
-# Master Loop (Yahoo → NSE fallback)
-# ---------------------------------
+# "Oriental Rail Infrastructure Ltd: 531859
+#"Patels Airtemp (India) Ltd": "517417",
+
+# Master Loop
 results = {}
 for name, symbol in stocks.items():
     print(f"\nFetching {name} ({symbol})...")
@@ -344,15 +383,15 @@ for name, symbol in stocks.items():
     results[name] = {"Symbol": normalize_symbol(symbol), **res}
     time.sleep(0.5)
 
-# Export results to Excel
-excelName = "Stock-List_" + datetime.now().strftime("%d-%m-%Y") + ".xlsx"
+# Export results to Excel inside "result" folder
+excelName = f"result/Stock-List_{date_str}.xlsx"
 df = pd.DataFrame(results).T
 df.to_excel(excelName)
 
 wb = load_workbook(excelName)
 ws = wb.active
 
-# Find 'Trend' column index and rename header to "Current Trend"
+# Find 'Trend' column index and rename header
 trend_col_idx = None
 for idx, cell in enumerate(ws[1], start=1):
     if cell.value == "Trend":
@@ -360,26 +399,25 @@ for idx, cell in enumerate(ws[1], start=1):
         cell.value = "Current Trend"
         break
 
-# Insert "Trend Change" as second last column
+# Insert "Trend Change" column
 last_col = ws.max_column
 trend_change_col_idx = last_col
 ws.insert_cols(trend_change_col_idx)
 ws.cell(row=1, column=trend_change_col_idx, value="Trend Change")
 
-# Define fills for coloring trend flips
+# Define fill colors
 red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
-trend_fill_green = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
-trend_fill_red = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+trend_fill_green = green_fill
+trend_fill_red = red_fill
 
-# Apply conditional formatting & Trend Change messages
+# Apply formatting and messages
 for row in range(2, ws.max_row + 1):
-    symbol = ws.cell(row=row, column=2).value  # 'Symbol' assumed second column
+    symbol = ws.cell(row=row, column=2).value  # Symbol assumed second column
     norm_symbol = normalize_symbol(symbol)
     trend_cell = ws.cell(row=row, column=trend_col_idx)
     trend_value = trend_cell.value
 
-    # Coloring Current Trend column cells
     if trend_value == "Bullish":
         trend_cell.fill = trend_fill_green
     elif trend_value == "Bearish":
@@ -392,13 +430,10 @@ for row in range(2, ws.max_row + 1):
 
     if previous_trend and trend_value and previous_trend != trend_value:
         update_msg = f"Trend changed from {previous_trend} to {trend_value}"
-
-        # Background color logic for trend flip
         if previous_trend == "Bearish" and trend_value == "Bullish":
             fill_to_apply = green_fill
         elif previous_trend == "Bullish" and trend_value == "Bearish":
             fill_to_apply = red_fill
-
 
     trend_change_cell.value = update_msg
     if fill_to_apply:
@@ -406,7 +441,7 @@ for row in range(2, ws.max_row + 1):
 
 wb.save(excelName)
 
-# Save the updated trends for the next run
+# Save trends for next run
 save_previous_trends()
 
-print(f"\n✅ {excelName} created with 'Current Trend' and 'Trend Change' columns with colored trend changes!")
+print(f"\n✅ {excelName} created with 'Current Trend' and 'Trend Change' colored columns!")
