@@ -1,57 +1,51 @@
 name: Monthly Stock Excel Report
 
 on:
- workflow_dispatch:
+  workflow_dispatch:
   schedule:
-    # Runs at 00:00 UTC on the first of every month
-    - cron: "0 0 1 * *"
+    - cron: "0 0 1 * *"  # 1st of every month
 
 jobs:
-  generate-and-email:
+  run-script:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Check out your repository
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      # 2️⃣ Set up Python
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
 
-      # 3️⃣ Install dependencies
-      - name: Install dependencies
-        run: |
-          # (optional) if you have requirements.txt
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install dependencies
+      run: |
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # 4️⃣ Run your script
-      - name: Run stock script
-        run: |
-          python script.py
-        # If your script outputs the Excel somewhere specific,
-        # adjust paths if needed
+    - name: Run script
+      run: |
+        python script.py
 
-      # 5️⃣ Send the Excel file by email
-      - name: Send Email with Excel
-        uses: dawidd6/action-send-mail@v6
-        with:
-          # Your SMTP server — Gmail shown here
-          # (SMTP must allow app access)
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
+    - name: Get latest Excel file
+      id: latest
+      run: |
+        LATEST_FILE=$(ls -t result/*.xlsx | head -n 1)
+        if [ -z "$LATEST_FILE" ]; then
+          echo "No report found!"
+          exit 1
+        fi
+        echo "file=$LATEST_FILE" >> $GITHUB_OUTPUT
 
-          # Email details
-          from: ${{ secrets.EMAIL_USER }}
-          to: "YOUR_EMAIL@example.com"
-          subject: "Monthly Stock Report"
-          body: "Hi there 👋\n\nHere is your monthly stock report Excel!"
-
-          # Attach the generated file — adjust filename if needed
-          attachments: "*.xlsx"
-
-          username: ${{ secrets.EMAIL_USER }}
-          password: ${{ secrets.EMAIL_PASS }}
+    - name: Send latest report over email
+      uses: dawidd6/action-send-mail@v6
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        secure: true
+        from: ${{ secrets.EMAIL_USER }}
+        to: "softengg.roshan@gmail.com"
+        subject: "📊 Monthly Stock Report"
+        body: "Attached is your latest generated stock report."
+        attachments: ${{ steps.latest.outputs.file }}
+        username: ${{ secrets.EMAIL_USER }}
+        password: ${{ secrets.EMAIL_PASS }}
