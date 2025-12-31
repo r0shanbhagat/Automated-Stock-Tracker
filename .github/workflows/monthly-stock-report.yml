@@ -49,3 +49,6 @@ jobs:
         attachments: ${{ steps.latest.outputs.file }}
         username: ${{ secrets.EMAIL_USER }}
         password: ${{ secrets.EMAIL_PASS }}
+
+        # forcing new commit
+
