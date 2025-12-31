@@ -36,7 +36,7 @@ jobs:
         fi
         echo "file=$LATEST_FILE" >> $GITHUB_OUTPUT
 
-    - name: Send latest report email
+    - name: Send latest report over email
       uses: dawidd6/action-send-mail@v6
       with:
         server_address: smtp.gmail.com
