@@ -1,5 +1,10 @@
 name: Monthly Stock Excel Report
 
+- name: Install dependencies
+  run: |
+    pip install yfinance pandas openpyxl
+    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
 on:
   workflow_dispatch:
   schedule:
