@@ -53,7 +53,7 @@ jobs:
         subject: "📊 Monthly Stock Report"
         body: "Hi, Here’s your monthly stock report."
         attachments: ${{ steps.latest.outputs.file }}
-        username: ${{ secrets.EMAIL_USER }}
+        username: "softengg.roshan@gmail.com"
         password: ${{ secrets.EMAIL_PASS }}
 
 
