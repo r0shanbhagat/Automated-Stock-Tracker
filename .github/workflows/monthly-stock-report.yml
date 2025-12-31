@@ -1,14 +1,9 @@
 name: Monthly Stock Excel Report
 
-- name: Install dependencies
-  run: |
-    pip install yfinance pandas openpyxl
-    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 1 * *"  # 1st of every month
+    - cron: "0 0 1 * *"  # Runs 1st of every month (UTC)
 
 jobs:
   run-script:
@@ -25,9 +20,9 @@ jobs:
 
     - name: Install dependencies
       run: |
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install yfinance pandas openpyxl
 
-    - name: Run script
+    - name: Run stock script
       run: |
         python script.py
 
@@ -36,12 +31,12 @@ jobs:
       run: |
         LATEST_FILE=$(ls -t result/*.xlsx | head -n 1)
         if [ -z "$LATEST_FILE" ]; then
-          echo "No report found!"
+          echo "No Excel report found in result/ folder!"
           exit 1
         fi
         echo "file=$LATEST_FILE" >> $GITHUB_OUTPUT
 
-    - name: Send latest report over email
+    - name: Send latest report email
       uses: dawidd6/action-send-mail@v6
       with:
         server_address: smtp.gmail.com
@@ -50,7 +45,7 @@ jobs:
         from: ${{ secrets.EMAIL_USER }}
         to: "softengg.roshan@gmail.com"
         subject: "📊 Monthly Stock Report"
-        body: "Attached is your latest generated stock report."
+        body: "Attached is your latest generated stock Excel report."
         attachments: ${{ steps.latest.outputs.file }}
         username: ${{ secrets.EMAIL_USER }}
         password: ${{ secrets.EMAIL_PASS }}
