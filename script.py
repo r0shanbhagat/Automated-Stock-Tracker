@@ -5,27 +5,39 @@ import json
 from datetime import datetime
 from openpyxl.reader.excel import load_workbook
 from openpyxl.styles import PatternFill
-from datetime import timedelta
 import os
 
 # Ensure output folders exist
 os.makedirs("previousdata", exist_ok=True)
 os.makedirs("result", exist_ok=True)
 
+# Get LAST MONTH's date for comparison (always first day of previous month)
+now = datetime.now()
+if now.month == 1:
+    # January → use December of previous year
+    prev_month = 12
+    prev_year = now.year - 1
+else:
+    prev_month = now.month - 1
+    prev_year = now.year
+
+# Use first day of previous month for comparison
+last_month_str = datetime(prev_year, prev_month, 1).strftime('%Y-%m-%d')
+print(f"Using last month data for comparison: {last_month_str}")
 
 # Normalize symbol by removing '.NS' suffix
 def normalize_symbol(sym):
     return sym.replace(".NS", "") if sym else sym
 
-
-# Load old trends for comparison (normalized symbol keys)
+# Load old trends for comparison (normalized symbol keys) - LAST MONTH
 try:
-    yesterday_str = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-    yesterday_filename = f'previousdata/previous_trends_{yesterday_str}.json'
-    with open(yesterday_filename, 'r') as f:
+    last_month_filename = f'previousdata/previous_trends_{last_month_str}.json'
+    with open(last_month_filename, 'r') as f:
         old_trends_raw = json.load(f)
         old_trends = {normalize_symbol(k): v for k, v in old_trends_raw.items()}
+    print(f"✅ Loaded trends from last month: {last_month_filename}")
 except FileNotFoundError:
+    print(f"⚠️ No trends file found for {last_month_filename}, starting fresh")
     old_trends = {}
 
 # Dictionary to store trends of current run (normalized symbol keys)
@@ -35,12 +47,10 @@ previous_trends = {}
 date_str = datetime.now().strftime('%Y-%m-%d')
 filename = f'previousdata/previous_trends_{date_str}.json'
 
-
 def save_previous_trends():
     normalized_save = {normalize_symbol(k): v for k, v in previous_trends.items()}
     with open(filename, 'w') as f:
         json.dump(normalized_save, f)
-
 
 def compute_trend(ytd_price_perct):
     if ytd_price_perct is None:
@@ -51,7 +61,6 @@ def compute_trend(ytd_price_perct):
         return "Bearish"
     else:
         return "Neutral"
-
 
 def get_returns_yahoo(symbol):
     try:
@@ -66,8 +75,7 @@ def get_returns_yahoo(symbol):
 
         def pct(days):
             if len(hist) > days:
-                return (hist['Close'].iloc[-1] / hist['Close'].iloc[-2] - 1) * 100 if days == 1 else \
-                    (current / hist['Close'].iloc[-days] - 1) * 100
+                return (hist['Close'].iloc[-1] / hist['Close'].iloc[-days] - 1) * 100
             return None
 
         start_year = datetime(datetime.today().year, 1, 1)
@@ -93,7 +101,6 @@ def get_returns_yahoo(symbol):
         print(f"Error fetching from Yahoo for {symbol} → {e}")
         return None
 
-
 def detect_trend_change(symbol, current_trend):
     norm_symbol = normalize_symbol(symbol)
     previous_trend = previous_trends.get(norm_symbol)
@@ -108,6 +115,263 @@ def detect_trend_change(symbol, current_trend):
 # Example Stock Mapping (complete with your 87 stocks)
 stocks = {
     "Marksans Pharma Ltd": "MARKSANS.NS",
+    "Astral Ltd": "ASTRAL.NS",
+    "Ice Make Refrigeration Ltd": "ICEMAKE.NS",
+    "Mahanagar Gas Ltd": "MGL.NS",
+    "Sanofi India Ltd": "SANOFI.NS",
+    "Clean Science and Technology Ltd": "CLEAN.NS",
+    "Cigniti Technologies Ltd": "CIGNITITEC.NS",
+    "Symphony Ltd": "SYMPHONY.NS",
+    "Finolex Cables Ltd": "FINCABLES.NS",
+    "Bajaj Auto Ltd": "BAJAJ-AUTO.NS",
+    "Rashtriya Chemicals and Fertilizers Ltd": "RCF.NS",
+    "Deepak Fertilizers and Petrochemicals Corp Ltd": "DEEPAKFERT.NS",
+    "Gujarat State Fertilizers & Chemicals Ltd": "GSFC.NS",
+    "Thangamayil Jewellery Ltd": "THANGAMAYL.NS",
+    "Fineotex Chemical Ltd": "FCL.NS",
+    "Alkyl Amines Chemicals Ltd": "ALKYLAMINE.NS",
+    "Havells India Ltd": "HAVELLS.NS",
+    "Gujarat Alkalies and Chemicals Ltd": "GUJALKALI.NS",
+    "Chemfab Alkalis Ltd": "CHEMFAB.NS",
+    "Ajanta Pharma Ltd": "AJANTPHARM.NS",
+    "Happiest Minds Technologies Ltd": "HAPPSTMNDS.NS",
+    "Venus Pipes and Tubes Ltd": "VENUSPIPES.NS",
+    "TALBROS Automotive Components Ltd": "TALBROAUTO.NS",
+    "Zydus Lifesciences Ltd": "ZYDUSLIFE.NS",
+    "Faze Three Ltd": "FAZE3Q.NS",
+    "Automotive Stampings and Assemblies Ltd": "AUTOIND.NS",
+    "Chennai Petroleum Corporation Ltd": "CHENNPETRO.NS",
+    "Intellect Design Arena Ltd": "INTELLECT.NS",
+    "Thejo Engineering Ltd": "THEJO.NS",
+    "Insecticides (India) Ltd": "INSECTICID.NS",
+    "Axiscades Technologies Ltd": "AXISCADES.NS",
+    "Eimco Elecon (India) Ltd": "EIMCOELECO.NS",
+    "Waaree Energies Ltd": "WAAREEENER.NS",
+    "DCX Systems Ltd": "DCXINDIA.NS",
+    "Ramkrishna Forgings Ltd": "RKFORGE.NS",
+    "Gujarat Narmada Valley Fertilizers & Chemicals Ltd": "GNFC.NS",
+    "JK Tyre & Industries Ltd": "JKTYRE.NS",
+    "Oracle Financial Services Software Ltd": "OFSS.NS",
+    "Aavas Financiers Ltd": "AAVAS.NS",
+    "Bharat Bijlee Ltd": "BBL.NS",
+    "Zydus Wellness Ltd": "ZYDUSWELL.NS",
+    "Alivus Life Sciences Ltd": "ALIVUS.NS",
+    "Hexaware Technologies Ltd": "HEXT.NS",
+    "LIC Housing Finance Ltd": "LICHSGFIN.NS",
+    "Tech Mahindra Ltd": "TECHM.NS",
+    "Suprajit Engineering Ltd": "SUPRAJIT.NS",
+    "IIFL Capital Services Ltd": "IIFLCAPS.NS",
+    "Welspun Investments and Commercials Ltd": "WELINV.NS",
+    "Lupin Ltd": "LUPIN.NS",
+    "Paras Defence and Space Technologies Ltd": "PARAS.NS",
+    "Unicommerce eSolutions Ltd": "UNIECOM.NS",
+    "Isgec Heavy Engineering Ltd": "ISGEC.NS",
+    "Apeejay Surrendra Park Hotels Ltd": "PARKHOTELS.NS",
+    "Indo US Bio-Tech Ltd": "INDOUS.NS",
+    "Moil Ltd": "MOIL.NS",
+    "Hindustan Zinc Ltd": "HINDZINC.NS",
+    "Kernex Microsystems (India) Ltd": "KERNEX.NS",
+    "Camlin Fine Sciences Ltd": "CAMLINFINE.NS",
+    "RHI Magnesita India Ltd": "RHIM.NS",
+    "Anik Industries Ltd": "ANIKINDS.NS",
+    "Time Technoplast Ltd": "TIMETECHNO.NS",
+    "R R Kabel Ltd": "RRKABEL.NS",
+    "Capacite Infraprojects Ltd": "CAPACITE.NS",
+    "Indian Hume Pipe Company Ltd": "INDIANHUME.NS",
+    "Pudumjee Paper Products Ltd": "PDMJEPAPER.NS",
+    "Tarc Ltd": "TARC.NS",
+    "Pokarna Ltd": "POKARNA.NS",
+    "Brigade Enterprises Ltd": "BRIGADE.NS",
+    "Info Edge (India) Ltd": "NAUKRI.NS",
+    "Awfis Space Solutions Ltd": "AWFIS.NS",
+    "Welspun Enterprises Ltd": "WELENT.NS",
+    "Ems Ltd": "EMSLIMITED.NS",
+    "Cohance Lifesciences Ltd": "COHANCE.NS",
+    "Dynacons Systems and Solutions Ltd": "DSSL.NS",
+    "AIA Engineering Ltd": "AIAENG.NS",
+    "Pearl Global Industries Ltd": "PGIL.NS",
+    "Hindustan Oil Exploration Company Ltd": "HINDOILEXP.NS",
+    "Exide Industries Ltd": "EXIDEIND.NS",
+    "Surya Roshni Ltd": "SURYAROSNI.NS",
+    "Birla Corporation Ltd": "BIRLACORPN.NS",
+    "Indo Count Industries Ltd": "ICIL.NS",
+    "Atul Auto Ltd": "ATULAUTO.NS",
+    "Crompton Greaves Consumer Electricals Ltd": "CROMPTON.NS",
+    "Tata Motors Passenger Vhcls Ltd": "TMPV.NS",
+    "Tata Motors Ltd": "TATCOV.NS",
+    "ACC Ltd": "ACC.NS",
+    "Chambal Fertilisers and Chemicals Ltd": "CHAMBLFERT.NS",
+    "Tejas Networks Ltd": "TEJASNET.NS",
+    "Carborundum Universal Ltd": "CARBORUNIV.NS",
+    "Kewal Kiran Clothing Ltd": "KKCL.NS",
+    "Mangalore Refinery and Petrochemicals Ltd": "MRPL.NS",
+    "Inox Wind Ltd": "INOXWIND.NS",
+    "Max Estates Ltd": "MAXESTATES.NS",
+    "Granules India Ltd": "GRANULES.NS",
+    "Galaxy Surfactants Ltd": "GALAXYSURF.NS",
+    "Indraprastha Gas Ltd": "IGL.NS",
+    "BASF India Ltd": "BASF.NS",
+    "Birlanu Ltd": "BIRLANU.NS",
+    "Nitin Spinners Ltd": "NITINSPIN.NS",
+    "TAJ GVK Hotels and Resorts Ltd": "TAJGVK.NS",
+    "Pix Transmissions Ltd": "PIXTRANS.NS",
+    "Trident Ltd": "TRIDENT.NS",
+    "TVS Holdings Ltd": "TVSHLTD.NS",
+    "Piramal Enterprises Ltd": "PEL.NS",
+    "Motilal Oswal Nasdaq Q50 ETF": "MONQ50.NS",
+    "Jbm Auto Ltd": "JBMA.NS",
+    "Rane Brake Lining Ltd": "RBL.NS",
+    "Gala Precision Engineering Ltd": "GALAPREC.NS",
+    "Indoco Remedies Ltd": "INDOCO.NS",
+    "Motilal Oswal Nifty Realty ETF": "MOREALTY.NS",
+    "Gujarat Fluorochemicals Ltd": "FLUOROCHEM.NS",
+    "Century Plyboards (India) Ltd": "CENTURYPLY.NS",
+    "Westlife Foodworld Ltd": "WESTLIFE.NS",
+    "Monarch Networth Capital Ltd": "MONARCH.NS",
+    "JITF Infralogistics Ltd": "JITFINFRA.NS",
+    "Rategain Travel Technologies Ltd": "RATEGAIN.NS",
+    "Swan Corp Ltd": "SWANCORP.NS",
+    "Firstsource Solutions Ltd": "FSL.NS",
+    "Sonata Software Ltd": "SONATSOFTW.NS",
+    "Yasho Industries Ltd": "YASHO.NS",
+    "Route Mobile Ltd": "ROUTE.NS",
+    "Bata India Ltd": "BATAINDIA.NS",
+    "Colgate-Palmolive (India) Ltd": "COLPAL.NS",
+    "Refex Industries Ltd": "REFEX.NS",
+    "Sona BLW Precision Forgings Ltd": "SONACOMS.NS",
+    "Embassy Office Parks REIT": "EMBASSY.NS",
+    "Birlasoft Ltd": "BSOFT.NS",
+    "Ceigall India Ltd": "CEIGALL.NS",
+    "Tata Consultancy Services Ltd": "TCS.NS",
+    "Network People Services Technologies Ltd": "NPST.NS",
+    "Mrs. Bectors Food Specialities Ltd": "BECTORFOOD.NS",
+    "Voltamp Transformers Ltd": "VOLTAMP.NS",
+    "Page Industries Ltd": "PAGEIND.NS",
+    "ABB India Ltd": "ABB.NS",
+    "AstraZeneca Pharma India Ltd": "ASTRAZEN.NS",
+    "Wendt (India) Ltd": "WENDT.NS",
+    "Procter & Gamble Hygiene & Health Care Ltd": "PGHH.NS",
+    "Honeywell Automation India Ltd": "HONAUT.NS",
+    "DISA India Ltd": "DISAQ.BO",
+    "Orissa Minerals Development Company Ltd": "ORISSAMINE.NS",
+    "GRP Ltd": "GRPLTD.NS",
+    "Polyplex Corporation Ltd": "POLYPLEX.NS",
+    "Ratnamani Metals & Tubes Ltd": "RATNAMANI.NS",
+    "United Breweries Ltd": "UBL.NS",
+    "Garware Hi-Tech Films Ltd": "GRWRHITECH.NS",
+    "Deepak Nitrite Ltd": "DEEPAKNTR.NS",
+    "Bajaj Electricals Ltd": "BAJAJELEC.NS",
+    "Chemplast Sanmar Ltd": "CHEMPLASTS.NS",
+    "Phoenix Mills Ltd": "PHOENIXLTD.NS",
+    "Grindwell Norton Ltd": "GRINDWELL.NS",
+    "KPIT Technologies Ltd": "KPITTECH.NS",
+    "Syngene International Ltd": "SYNGENE.NS",
+    "KNR Constructions Ltd": "KNRCON.NS",
+    "Sundram Fasteners Ltd": "SUNDRMFAST.NS",
+    "ZF Commercial Vehicle Control System India Ltd": "ZFCVINDIA.NS",
+    "Rolex Rings Ltd": "ROLEXRINGS.NS",
+    "Indo Tech Transformers Ltd": "INDOTECH.NS",
+    "JSW Holdings Ltd": "JSWHL.NS",
+    "Piramal Pharma Ltd": "PPLPHARMA.NS",
+    "Crisil Ltd": "CRISIL.NS",
+    "Varun Beverages Ltd": "VBL.NS",
+    "Bajaj Holdings & Investment Ltd": "BAJAJHLDNG.NS",
+    "RPG Life Sciences Ltd": "RPGLIFE.NS",
+    "Bharat Rasayan Ltd": "BHARATRAS.NS",
+    "Tata Elxsi Ltd": "TATAELXSI.NS",
+    "Persistent Systems Ltd": "PERSISTENT.NS",
+    "Trent Ltd": "TRENT.NS",
+    "Sanofi Consumer Healthcare India Ltd": "SANOFICONR.NS",
+    "Sundaram Finance Ltd": "SUNDARMFIN.NS",
+    "Akzo Nobel India Ltd": "AKZOINDIA.NS",
+    "Thermax Ltd": "THERMAX.NS",
+    "GlaxoSmithKline Pharmaceuticals Ltd": "GLAXO.NS",
+    "Mankind Pharma Ltd": "MANKIND.NS",
+    "Mastek Ltd": "MASTEK.NS",
+    "Angel One Ltd": "ANGELONE.NS",
+    "Poly Medicure Ltd": "POLYMED.NS",
+    "Interarch Building Solutions Ltd": "INTERARCH.NS",
+    "Alkem Laboratories Ltd": "ALKEM.NS",
+    "Narayana Hrudayalaya Ltd": "NH.NS",
+    "Epigral Ltd": "EPIGRAL.NS",
+    "Concord Biotech Ltd": "CONCORDBIO.NS",
+    "D P Abhushan Ltd": "DPABHUSHAN.NS",
+    "VA Tech Wabag Ltd": "WABAG.NS",
+    "Balaji Amines Ltd": "BALAMINES.NS",
+    "IPCA Laboratories Ltd": "IPCALAB.NS",
+    "Websol Energy Systems Ltd": "WEBELSOLAR.NS",
+    "Torrent Power Ltd": "TORNTPOWER.NS",
+    "Aurionpro Solutions Ltd": "AURIONPRO.NS",
+    "Godrej Consumer Products Ltd": "GODREJCP.NS",
+    "Lodha Developers Ltd": "LODHA.NS",
+    "Action Construction Equipment Ltd": "ACE.NS",
+    "Ramco Cements Ltd": "RAMCOCEM.NS",
+    "Associated Alcohols & Breweries Ltd": "ASALCBR.NS",
+    "S.P. Apparels Ltd": "SPAL.NS",
+    "Gokaldas Exports Ltd": "GOKEX.NS",
+    "Sumitomo Chemical India Ltd": "SUMICHEM.NS",
+    "Berger Paints India Ltd": "BERGEPAINT.NS",
+    "Triveni Turbine Ltd": "TRITURBINE.NS",
+    "Transformers and Rectifiers (India) Ltd": "TARIL.NS",
+    "MSTC Ltd": "MSTCLTD.NS",
+    "Jash Engineering Ltd": "JASH.NS",
+    "Kalyan Jewellers India Ltd": "KALYANKJIL.NS",
+    "HPL Electric & Power Ltd": "HPL.NS",
+    "Epack Durable Ltd": "EPACK.NS",
+    "Panama Petrochem Ltd": "PANAMAPET.NS",
+    "Jindal SAW Ltd": "JINDALSAW.NS",
+    "Gail (India) Ltd": "GAIL.NS",
+    "Cera Sanitaryware Ltd": "CERA.NS",
+    "Bayer Cropscience Ltd": "BAYERCROP.NS",
+    "TCPL Packaging Ltd": "TCPLPACK.NS",
+    "Power Mech Projects Ltd": "POWERMECH.NS",
+    "Summit Securities Ltd": "SUMMITSEC.NS",
+    "Anup Engineering Ltd": "ANUP.NS",
+    "Balkrishna Industries Ltd": "BALKRISIND.NS",
+    "MPS Ltd": "MPSLTD.NS",
+    "Bajaj Finserv Ltd": "BAJAJFINSV.NS",
+    "ICICI Lombard General Insurance Co Ltd": "ICICIGI.NS",
+    "Blue Star Ltd": "BLUESTARCO.NS",
+    "Oberoi Realty Ltd": "OBEROIRLTY.NS",
+    "Mallcom (India) Ltd": "MALLCOM.NS",
+    "Max Healthcare Institute Ltd": "MAXHEALTH.NS",
+    "Amara Raja Energy & Mobility Ltd": "ARE&M.NS",
+    "Dabur India Ltd": "DABUR.NS",
+    "BLS International Services Ltd": "BLS.NS",
+    "Petronet LNG Ltd": "PETRONET.NS",
+    "Indian Railway Finance Corp Ltd": "IRFC.NS",
+    "Power Grid Corporation of India Ltd": "POWERGRID.NS",
+    "Pidilite Industries Ltd": "PIDILITIND.NS",
+    "Federal Bank Ltd": "FEDERALBNK.NS",
+    "3M India Ltd": "3MINDIA.NS",
+    "Aarti Industries Ltd": "AARTIIND.NS",
+    "Cms Info Systems Ltd": "CMSINFO.NS",
+    "PG Electroplast Ltd": "PGEL.NS",
+    "Gujarat Ambuja Exports Ltd": "GAEL.NS",
+    "Share India Securities Ltd": "SHAREINDIA.NS",
+    "AGI Greenpac Ltd": "AGI.NS",
+    "SML Mahindra Limited": "SMLISUZU.NS",
+    "Afcons Infrastructure Limited": "AFCONS.NS",
+    "Oil and Natural Gas Corporation Ltd": "ONGC.NS",
+    "Adani Enterprises Ltd": "ADANIENT.NS",
+    "Siemens Ltd": "SIEMENS.NS",
+    "Praj Industries Ltd": "PRAJIND.NS",
+    "Ion Exchange (India) Ltd": "IONEXCHANG.NS",
+    "D Link (India) Limited": "DLINKINDIA.NS",
+    "HG Infra Engineering Ltd": "HGINFRA.NS",
+    "Texmaco Rail & Engineering Ltd": "TEXRAIL.NS",
+    "Technocraft Industries (India) Ltd": "TIIL.NS",
+    "PTC India Ltd": "PTC.NS",
+    "BF Investment Ltd": "BFINVEST.NS",
+    "Apollo Pipes Ltd": "APOLLOPIPE.NS",
+    "Maharashtra Seamless Ltd": "MAHSEAMLES.NS",
+    "Shakti Pumps (India) Ltd": "SHAKTIPUMP.NS",
+    "Ganesha Ecosphere Ltd": "GANECOS.NS",
+    "Man Infraconstruction Ltd": "MANINFRA.NS",
+    "Neogen Chemicals Ltd": "NEOGEN.NS",
+    "E2E Networks Ltd": "E2E.NS",
+    "Shanti Gold International Ltd": "SHANTIGOLD.NS",
+    "Zaggle Prepaid Ocean Services Ltd": "ZAGGLE.NS",
     "Jindal Poly Films Ltd": "JINDALPOLY.NS"
 }
 
@@ -142,11 +406,11 @@ for idx, cell in enumerate(ws[1], start=1):
         cell.value = "Current Trend"
         break
 
-# Insert "Trend Change" column
+# Insert "Trend Change" column (now compares vs LAST MONTH)
 last_col = ws.max_column
 trend_change_col_idx = last_col
 ws.insert_cols(trend_change_col_idx)
-ws.cell(row=1, column=trend_change_col_idx, value="Trend Change")
+ws.cell(row=1, column=trend_change_col_idx, value="Trend Change (vs Last Month)")
 
 # Define fill colors
 red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
@@ -167,12 +431,12 @@ for row in range(2, ws.max_row + 1):
         trend_cell.fill = trend_fill_red
 
     trend_change_cell = ws.cell(row=row, column=trend_change_col_idx)
-    previous_trend = old_trends.get(norm_symbol)
+    previous_trend = old_trends.get(norm_symbol)  # Now from LAST MONTH
     update_msg = ""
     fill_to_apply = None
 
     if previous_trend and trend_value and previous_trend != trend_value:
-        update_msg = f"Trend changed from {previous_trend} to {trend_value}"
+        update_msg = f"{previous_trend} → {trend_value}"
         if previous_trend == "Bearish" and trend_value == "Bullish":
             fill_to_apply = green_fill
         elif previous_trend == "Bullish" and trend_value == "Bearish":
@@ -184,7 +448,9 @@ for row in range(2, ws.max_row + 1):
 
 wb.save(excelName)
 
-# Save trends for next run
+# Save trends for next run (for future monthly comparisons)
 save_previous_trends()
 
-print(f"\n✅ {excelName} created with 'Current Trend' and 'Trend Change' colored columns!")
+print(f"\n✅ {excelName} created!")
+print(f"📊 Trends compared against last month: {last_month_str}")
+print(f"💾 Current trends saved to: {filename}")

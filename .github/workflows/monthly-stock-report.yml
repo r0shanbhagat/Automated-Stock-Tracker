@@ -10,48 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-    - name: Install dependencies
-      run: |
-        pip install yfinance pandas openpyxl
+      - name: Install dependencies
+        run: |
+          pip install yfinance pandas openpyxl
 
-    - name: Run stock script
-      run: |
-        python script.py
+      - name: Run stock script
+        run: |
+          python script.py
 
-    - name: Get latest Excel file
-      id: latest
-      run: |
-        LATEST_FILE=$(ls -t result/*.xlsx | head -n 1)
-        if [ -z "$LATEST_FILE" ]; then
-          echo "No Excel report found in result/ folder!"
-          exit 1
-        fi
-        echo "file=$LATEST_FILE" >> $GITHUB_OUTPUT
+      - name: Get latest Excel file
+        id: latest
+        run: |
+          LATEST_FILE=$(ls -t result/*.xlsx | head -n 1)
+          if [ -z "$LATEST_FILE" ]; then
+            echo "No Excel report found in result/ folder!"
+            exit 1
+          fi
+          echo "file=$LATEST_FILE" >> $GITHUB_OUTPUT
 
-    - name: Debug mail inputs
-      run: |
-        echo "FROM=${{ secrets.EMAIL_USER }}"
-        echo "ATTACH=${{ steps.latest.outputs.file }}"
+      - name: Set date for subject
+        id: date
+        run: echo "MONTH_YEAR=$(date +'%b-%Y')" >> $GITHUB_OUTPUT
 
-
-    - name: Send latest report over email
-      uses: dawidd6/action-send-mail@v6
-      with:
-        server_address: smtp.gmail.com
-        server_port: 465
-        secure: true
-        from: "Stock Reports-Roshan"
-        to: "softengg.roshan@gmail.com"
-        subject: "📊 Monthly Stock Report - $(date +'%b-%Y')"
-        body: "Hi Roshan, Here’s your monthly stock report."
-        attachments: ${{ steps.latest.outputs.file }}
-        username: ${{ secrets.EMAIL_USER }}
-        password: ${{ secrets.EMAIL_PASS }}
+      - name: Send latest report over email
+        uses: dawidd6/action-send-mail@v6
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          from: "Stock Reports-Roshan"
+          to: "softengg.roshan@gmail.com"
+          subject: "📊 Monthly Stock Report - ${{ steps.date.outputs.MONTH_YEAR }}"
+          body: "Hi Roshan, Here’s your monthly stock report."
+          attachments: ${{ steps.latest.outputs.file }}
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
