@@ -36,6 +36,12 @@ jobs:
         fi
         echo "file=$LATEST_FILE" >> $GITHUB_OUTPUT
 
+    - name: Debug mail inputs
+      run: |
+        echo "FROM=${{ secrets.EMAIL_USER }}"
+        echo "ATTACH=${{ steps.latest.outputs.file }}"
+
+
     - name: Send latest report over email
       uses: dawidd6/action-send-mail@v6
       with:
@@ -49,6 +55,7 @@ jobs:
         attachments: ${{ steps.latest.outputs.file }}
         username: ${{ secrets.EMAIL_USER }}
         password: ${{ secrets.EMAIL_PASS }}
+
 
         # forcing new commit
 
