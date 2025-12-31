@@ -48,12 +48,12 @@ jobs:
         server_address: smtp.gmail.com
         server_port: 465
         secure: true
-        from: "softengg.roshan@gmail.com"
+        from: ${{ secrets.EMAIL_USER }}
         to: "softengg.roshan@gmail.com"
         subject: "📊 Monthly Stock Report"
         body: "Hi, Here’s your monthly stock report."
         attachments: ${{ steps.latest.outputs.file }}
-        username: "softengg.roshan@gmail.com"
+        username: ${{ secrets.EMAIL_USER }}
         password: ${{ secrets.EMAIL_PASS }}
 
 
