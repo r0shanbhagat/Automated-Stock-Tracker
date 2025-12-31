@@ -45,7 +45,7 @@ jobs:
         from: ${{ secrets.EMAIL_USER }}
         to: "softengg.roshan@gmail.com"
         subject: "📊 Monthly Stock Report"
-        body: "Here’s your monthly stock report."
+        body: "Hi, Here’s your monthly stock report."
         attachments: ${{ steps.latest.outputs.file }}
         username: ${{ secrets.EMAIL_USER }}
         password: ${{ secrets.EMAIL_PASS }}
