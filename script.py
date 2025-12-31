@@ -111,8 +111,7 @@ def detect_trend_change(symbol, current_trend):
         print(f"Trend changed for {norm_symbol}: {previous_trend} → {current_trend}")
     previous_trends[norm_symbol] = current_trend
 
-
-# Example Stock Mapping (complete with your 87 stocks)
+# Your complete stocks list (unchanged)
 stocks = {
     "Marksans Pharma Ltd": "MARKSANS.NS",
     "Astral Ltd": "ASTRAL.NS",
@@ -406,11 +405,24 @@ for idx, cell in enumerate(ws[1], start=1):
         cell.value = "Current Trend"
         break
 
-# Insert "Trend Change" column (now compares vs LAST MONTH)
-last_col = ws.max_column
-trend_change_col_idx = last_col
-ws.insert_cols(trend_change_col_idx)
-ws.cell(row=1, column=trend_change_col_idx, value="Trend Change (vs Last Month)")
+# **NEW: Find "Last Updated" column index FIRST**
+last_updated_col_idx = None
+for idx, cell in enumerate(ws[1], start=1):
+    if cell.value == "Last Updated":
+        last_updated_col_idx = idx
+        break
+
+# Insert "Trend Change" column BEFORE "Last Updated"
+if last_updated_col_idx:
+    trend_change_col_idx = last_updated_col_idx  # Insert at Last Updated position
+    ws.insert_cols(trend_change_col_idx)        # This shifts Last Updated right
+    ws.cell(row=1, column=trend_change_col_idx, value="Trend Change (vs Last Month)")
+else:
+    # Fallback: insert at end if "Last Updated" not found
+    last_col = ws.max_column
+    trend_change_col_idx = last_col
+    ws.insert_cols(trend_change_col_idx)
+    ws.cell(row=1, column=trend_change_col_idx, value="Trend Change (vs Last Month)")
 
 # Define fill colors
 red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
