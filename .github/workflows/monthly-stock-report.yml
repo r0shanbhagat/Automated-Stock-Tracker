@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4  # Updated to v4
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v5  # Updated to v5
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
@@ -44,7 +44,7 @@ jobs:
         run: echo "MONTH_YEAR=$(date +'%b-%Y')" >> $GITHUB_OUTPUT
 
       - name: Send latest report over email
-        uses: dawidd6/action-send-mail@v7  # Updated to v7
+        uses: dawidd6/action-send-mail@v7
         with:
           server_address: smtp.gmail.com
           server_port: 465
@@ -60,7 +60,7 @@ jobs:
       - name: Commit updated reports
         run: |
           git config --local user.email "softengg.roshan@gmail.com"
-          git config --local user.name "Roshan.Bhagat"
+          git config --local user.name "Roshan"
           git add result/*.xlsx previousdata/*.json
           git commit -m "📊 Update monthly stock report - ${{ steps.date.outputs.MONTH_YEAR }}" || echo "No changes to commit"
-          git push[web:17][web:20]
+          git push
