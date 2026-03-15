@@ -147,7 +147,7 @@ if __name__ == "__main__":
         print("📊 SUMMARY REPORT")
         print("=" * 50)
         print(f"✅ STOCKS FOUND IN PORTFOLIO < {threshold_display}: {len(result['low_value_stocks'])}")
-        print(f"⚠️  STOCKS FOUND BUT ≥ {threshold_display}: {len(result['high_value_stocks'])}")
+        print(f"⚠️  STOCKS FOUND ≥ {threshold_display}: {len(result['high_value_stocks'])}")
         print(f"❌ STOCKS NOT FOUND IN PORTFOLIO: {len(result['not_found_stocks'])}")
         print(f"📈 Total Stocks Checked: {result['total_checked']}")
         print("=" * 50)
