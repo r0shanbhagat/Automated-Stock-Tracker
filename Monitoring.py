@@ -119,7 +119,7 @@ def process_portfolio_stocks(excel_file_path, threshold=30000):
 
 # 🚀 RUN IT
 if __name__ == "__main__":
-    excel_file = "8504444272_PortFolioEqtSummary.csv"
+    excel_file = "PortFolioEqtSummary.csv"
     result = process_portfolio_stocks(excel_file, threshold=30000)
 
     if result:
