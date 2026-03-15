@@ -12,7 +12,8 @@ def process_portfolio_stocks(excel_file_path, threshold=30000):
     MARKET_VALUE_THRESHOLD = threshold  # Change to 20000, 25000 anytime!
 
     STOCK_CODES_TEXT = """
-  NARHRU,GOOLUC,QUAPOW,, MAHSCO,HONAUT ,"ABC"            
+	NETSTO		ANGBRO	COMAGE	IIFWEA	MCX
+      
     """
 
     # Advanced extraction + cleaning
@@ -124,20 +125,20 @@ if __name__ == "__main__":
     if result:
         threshold_display = f"₹{result['threshold']:,}"
 
-        print(f"\n🎯 LOW VALUE STOCKS (< {threshold_display}):")
+        print(f"\n🎯 LOW VALUE STOCKS (< {threshold_display}): [{len(result['low_value_stocks'])}]")
         print("-" * 40)
         for stock in result['low_value_stocks']:
             print(f"💰 {stock['stock_code']:15} | ₹{stock['market_value']:>10,.0f}")
 
         if result['not_found_stocks']:
-            print(f"\n❌ STOCKS NOT FOUND IN PORTFOLIO:")
+            print(f"\n❌ STOCKS NOT FOUND IN PORTFOLIO: [{len(result['not_found_stocks'])}]")
             print("-" * 40)
             for stock in result['not_found_stocks']:
                 print(f"🔍 {stock:15} | Not in your holdings")
 
         # 🆕 NEW: Display high value stocks
         if result['high_value_stocks']:
-            print(f"\n⚠️  STOCKS ABOVE THRESHOLD (≥ {threshold_display}):")
+            print(f"\n⚠️  STOCKS ABOVE THRESHOLD (≥ {threshold_display}): [{len(result['high_value_stocks'])}]")
             print("-" * 40)
             for stock in result['high_value_stocks']:
                 print(f"📈 {stock['stock_code']:15} | ₹{stock['market_value']:>10,.0f}")
